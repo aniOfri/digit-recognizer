@@ -24,26 +24,29 @@ res.send("server")
 app.post('/request', (req, res) =>{;
     var data = req.body.dataUrl;//.split(',')[1];
 
-    getPixels(data, function(err, pixels){
+    var image = getPixels(data, function(err, pixels){
         if (err){
             console.log(err)
             return
         }
-        var float32 = new Float32Array(784);
+        var float32 = []//new Float32Array(784);
         
         var pixels = Array.from(pixels.data);
         temp_array = []
-        for (let i = 0; i < 28*28*4; i+=3){
+        for (let i = 0; i < 28*28*4; i+=4){
             
-            temp_array.push(pixels);
+            temp_array.push(pixels[i+3]);
         }
-        float32.set(temp_array);
-        
-        console.dir(float32, {'maxArrayLength': null});
-    })
-    
-    //console.dir(array, {'maxArrayLength': null});
-    //console.log(array);
+        float32.push(temp_array);
+
+        return float32;
+    });
+
+    var normalized = normalizeData(image);
+
+    console.log(normalized);
+
+
 })
 
 
