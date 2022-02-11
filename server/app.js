@@ -2,12 +2,14 @@
 const fs = require('fs');
 const tf =require('@tensorflow/tfjs-node');
 
-const base64 = require('urlsafe-base64')
+const getPixels = require("get-pixels")
+
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
-const port = 3000
+
+const PORT = 3000
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 
@@ -20,18 +22,33 @@ res.send("server")
 })
 
 app.post('/request', (req, res) =>{;
-    var data = req.body.dataUrl//.split(',')[1];
-    console.log(data)
-    //var buf = Buffer.from(data, 'base64')
-    //buf = base64.decode(data);
+    var data = req.body.dataUrl;//.split(',')[1];
 
-    //console.dir(data, {'maxArrayLength': null});
-    //console.log(JSON.stringify(buf));
+    getPixels(data, function(err, pixels){
+        if (err){
+            console.log(err)
+            return
+        }
+        var float32 = new Float32Array(784);
+        
+        var pixels = Array.from(pixels.data);
+        temp_array = []
+        for (let i = 0; i < 28*28*4; i+=3){
+            
+            temp_array.push(pixels);
+        }
+        float32.set(temp_array);
+        
+        console.dir(float32, {'maxArrayLength': null});
+    })
+    
+    //console.dir(array, {'maxArrayLength': null});
+    //console.log(array);
 })
 
 
-app.listen(port, ()=>{
-    console.log(`Server is runing on port ${port}`)
+app.listen(PORT, ()=>{
+    console.log(`Server is runing on port ${PORT}`)
 })
 
 function getData(){
@@ -188,6 +205,7 @@ async function showAccuracy(model, data, batchSize = 500) {
     for (let i = 0; i < batchSize; i++){
         console.log(pred[i] +" - "+ data[i][0]);
     }
+    return;
 }
 
 async function start(){

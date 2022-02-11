@@ -190,7 +190,7 @@ $(document).ready(function () {
    if (!clear && !sent){
       console.log("Sent!");
 
-      var canvasData = CanvasToBMP.toDataURL(canvas); //canvas.toDataURL("image/bmp");
+      var canvasData =  canvas.toDataURL(); //canvas.toDataURL("image/bmp");
       console.log(canvasData);
       $.post("http://localhost:3000/request",
       {
