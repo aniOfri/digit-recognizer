@@ -10,6 +10,7 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 
 const PORT = 3000
+var model;
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 
@@ -21,37 +22,26 @@ app.get('/', (req, res)=>{
 res.send("server")
 })
 
-app.post('/request', (req, res) =>{;
+app.post('/request', async (req, res) =>{;
     var data = req.body.dataUrl;//.split(',')[1];
 
-    var image = getPixels(data, function(err, pixels){
+    await getPixels(data, async function(err, pixels){
         if (err){
             console.log(err)
             return
         }
-        var float32 = []//new Float32Array(784);
         
         var pixels = Array.from(pixels.data);
-        temp_array = []
+        var array = []
         for (let i = 0; i < 28*28*4; i+=4){
             
-            temp_array.push(pixels[i+3]);
+            array.push(pixels[i+3]);
         }
-        float32.push(temp_array);
+        
+        data = [[1, array]]
 
-        return float32;
+        await showAccuracy(model, [["is the AI's guess.", array]], 1);
     });
-
-    var normalized = normalizeData(image);
-
-    console.log(normalized);
-
-
-})
-
-
-app.listen(PORT, ()=>{
-    console.log(`Server is runing on port ${PORT}`)
 })
 
 function getData(){
@@ -144,7 +134,7 @@ async function train(model, data){
     const TEST = 1000;
 
     const [trainXs, trainYs] = tf.tidy(()=>{
-        const d = normalizeData(TRAIN, data[0]);
+        const d = normalizeData(TRAIN, data[0],false);
 
         return [
             d.xs.reshape([TRAIN, 28, 28, 1]),
@@ -153,7 +143,7 @@ async function train(model, data){
     });
 
     const [testXs, testYs] = tf.tidy(()=>{
-        const d = normalizeData(TEST, data[1]);
+        const d = normalizeData(TEST, data[1],false);
 
         return [
             d.xs.reshape([TEST, 28, 28, 1]),
@@ -164,12 +154,12 @@ async function train(model, data){
     return model.fit(trainXs, trainYs, {
         batchSize: BATCH_SIZE,
         validationData: [testXs, testYs],
-        epochs: 5,
+        epochs: 10,
         shuffle: true
       });
 }
 
-function normalizeData(batchSize, data){
+function normalizeData(batchSize, data, print){
     var imagesArray = new Float32Array(batchSize * 784);
     var labelsArray = new Uint8Array(batchSize * 10);
 
@@ -193,7 +183,7 @@ function normalizeData(batchSize, data){
 async function doPrediction(model, data, batchSize = 500) {
     const IMAGE_WIDTH = 28;
     const IMAGE_HEIGHT = 28;
-    const testData = normalizeData(batchSize, data)
+    const testData = normalizeData(batchSize, data,false)
     const testxs = testData.xs.reshape([batchSize, IMAGE_WIDTH, IMAGE_HEIGHT, 1]);
     const labels = testData.labels.argMax(-1);
     const preds = model.predict(testxs).argMax(-1);
@@ -208,17 +198,21 @@ async function showAccuracy(model, data, batchSize = 500) {
     for (let i = 0; i < batchSize; i++){
         console.log(pred[i] +" - "+ data[i][0]);
     }
-    return;
+    return
 }
 
 async function start(){
     const data = getData();
 
-    const model = getModel();
+    model = getModel();
     
     await train(model, data);
 
-    await showAccuracy(model, data[0], 20);
+    //await showAccuracy(model, data[0], 20);
+
+    app.listen(PORT, ()=>{
+        console.log(`Server is runing on port ${PORT}`)
+    })
 }
 
 start();

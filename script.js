@@ -1,14 +1,6 @@
 $(document).ready(function () {
     $("#submit").click(function () {
-       console.log("hello");
-       $.post("http://localhost:3000/request",
-          {
-             username: "viSion",
-             password: "Professional gamer"
-          },
-          function (data, status) {
-             console.log(data);
-          });
+      sendCanvas();
     });
  });
 
@@ -204,5 +196,4 @@ $(document).ready(function () {
 }
 
  
-setInterval(sendCanvas, 1000);
  
