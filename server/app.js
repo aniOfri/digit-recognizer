@@ -20,13 +20,13 @@ res.send("server")
 })
 
 app.post('/request', (req, res) =>{;
-    var data = req.body.dataUrl.split(',')[1];
-
-    var buf = Buffer.from(data, 'base64')
+    var data = req.body.dataUrl//.split(',')[1];
+    console.log(data)
+    //var buf = Buffer.from(data, 'base64')
     //buf = base64.decode(data);
 
-    console.dir(data, {'maxArrayLength': null});
-    console.log(JSON.stringify(buf));
+    //console.dir(data, {'maxArrayLength': null});
+    //console.log(JSON.stringify(buf));
 })
 
 
