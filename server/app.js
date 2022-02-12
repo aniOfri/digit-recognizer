@@ -38,15 +38,12 @@ app.post('/request', async (req, res) =>{;
     const preds = model.predict(testxs);
 
     var pred = await preds.data();
-    
-    var results = [];
-    for (let i = 0; i < 10; i++){
-        results.push([i, pred[i]]);
-    }
 
-    console.log(results);
-      
-    res.status(200).send({ response: results +" is the AI's guess." });
+    var results = [];
+    for (let i = 0; i < 10; i++)
+        results.push(pred[i].toFixed(3));
+
+    res.status(200).send({ response: results});
     });
 })
 
@@ -135,9 +132,9 @@ function getModel(){
 }
 
 async function train(model, data){
-    const BATCH_SIZE = 100;
-    const TRAIN = 1500//0;
-    const TEST = 1500//0;
+    const BATCH_SIZE = 1000;
+    const TRAIN = 15000;
+    const TEST = 15000;
 
     const [trainXs, trainYs] = tf.tidy(()=>{
         const d = normalizeData(TRAIN, data[0]);
@@ -160,7 +157,7 @@ async function train(model, data){
     return model.fit(trainXs, trainYs, {
         batchSize: BATCH_SIZE,
         validationData: [testXs, testYs],
-        epochs: 10,
+        epochs: 50,
         shuffle: true
       });
 }

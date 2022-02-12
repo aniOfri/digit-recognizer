@@ -41,6 +41,7 @@ $(document).ready(function () {
      if(isDrawing){
        context.lineTo(mouseX, mouseY);
        context.stroke();
+       sendCanvas();
      }
    });
  
@@ -62,7 +63,10 @@ $(document).ready(function () {
    clearButton.addEventListener('click', function() {
       clear = true;
      context.clearRect(0, 0, canvas.width, canvas.height);
-     $("#guess").html("[] is the AI's guess.");
+     for (let i = 0; i < 10; i++){
+      $("#guess"+i).css('color', 'black');
+      $("#guess"+i).html(i+": [---]");
+    }
    });
  
    /*/ Handle Save Button
@@ -81,13 +85,23 @@ $(document).ready(function () {
 
  function sendCanvas(){
       var canvasData =  canvas.toDataURL();
-      console.log(canvasData);
       $.post("http://localhost:3000/request",
       {
          dataUrl: canvasData,
       },
       function (data, status) {
-         $("#guess").html(data.response);
+          results = data.response;
+          var maxValue = 0;
+          var maxIndex = -1;
+          for (let i = 0; i < 10; i++){
+            $("#guess"+i).css('color', 'black');
+            $("#guess"+i).html(i+": "+results[i]);
+            if (results[i] > maxValue){
+              maxValue = results[i];
+              maxIndex = i;
+            }
+          }
+          $("#guess"+maxIndex).css('color', 'red');
       });
    }
 
