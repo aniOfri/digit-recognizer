@@ -6,21 +6,9 @@ const getPixels = require("get-pixels")
 
 const express = require('express')
 const app = express()
-const bodyParser = require('body-parser')
-const cors = require('cors')
 
 const PORT = 3000
 var model;
-
-app.use( bodyParser.json() );       // to support JSON-encoded bodies
-
-app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
- extended: true})); 
-app.use(cors())
-
-app.get('/', (req, res)=>{
-res.send("server")
-})
 
 app.post('/request', async (req, res) =>{;
     var data = req.body.dataUrl;//.split(',')[1];
@@ -35,12 +23,14 @@ app.post('/request', async (req, res) =>{;
         var array = []
         for (let i = 0; i < 28*28*4; i+=4){
             
-            array.push(pixels[i+3]);
+            array.push(pixels[i+3]/255);
         }
-        
         data = [[1, array]]
 
-        await showAccuracy(model, [["is the AI's guess.", array]], 1);
+    const [preds, labels] = await doPrediction(model, [[0, array]], 1);
+    pred = await preds.data();
+      
+    res.status(200).send({ response: pred[0] +" is the AI's guess." });
     });
 })
 
