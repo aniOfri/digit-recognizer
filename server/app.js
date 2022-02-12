@@ -33,10 +33,20 @@ app.post('/request', async (req, res) =>{;
         }
         data = [[1, array]]
 
-    const [preds, labels] = await doPrediction(model, [[0, array]], 1);
-    pred = await preds.data();
+    const testData = normalizeData(1, [[0, array]])
+    const testxs = testData.xs.reshape([1, 28, 28, 1]);
+    const preds = model.predict(testxs);
+
+    var pred = await preds.data();
+    
+    var results = [];
+    for (let i = 0; i < 10; i++){
+        results.push([i, pred[i]]);
+    }
+
+    console.log(results);
       
-    res.status(200).send({ response: pred[0] +" is the AI's guess." });
+    res.status(200).send({ response: results +" is the AI's guess." });
     });
 })
 
@@ -50,7 +60,7 @@ function getData(){
     let test = [];
     let data = [];
 
-	for (var image = 0; image < 8192; image++) {
+	for (var image = 0; image < 15000; image++) {
 		var pixels1 = [];
         var pixels2 = [];
 
@@ -125,12 +135,12 @@ function getModel(){
 }
 
 async function train(model, data){
-    const BATCH_SIZE = 512;
-    const TRAIN = 5500;
-    const TEST = 1000;
+    const BATCH_SIZE = 100;
+    const TRAIN = 1500//0;
+    const TEST = 1500//0;
 
     const [trainXs, trainYs] = tf.tidy(()=>{
-        const d = normalizeData(TRAIN, data[0],false);
+        const d = normalizeData(TRAIN, data[0]);
 
         return [
             d.xs.reshape([TRAIN, 28, 28, 1]),
@@ -139,7 +149,7 @@ async function train(model, data){
     });
 
     const [testXs, testYs] = tf.tidy(()=>{
-        const d = normalizeData(TEST, data[1],false);
+        const d = normalizeData(TEST, data[1]);
 
         return [
             d.xs.reshape([TEST, 28, 28, 1]),
@@ -155,7 +165,7 @@ async function train(model, data){
       });
 }
 
-function normalizeData(batchSize, data, print){
+function normalizeData(batchSize, data){
     var imagesArray = new Float32Array(batchSize * 784);
     var labelsArray = new Uint8Array(batchSize * 10);
 
@@ -179,17 +189,16 @@ function normalizeData(batchSize, data, print){
 async function doPrediction(model, data, batchSize = 500) {
     const IMAGE_WIDTH = 28;
     const IMAGE_HEIGHT = 28;
-    const testData = normalizeData(batchSize, data,false)
+    const testData = normalizeData(batchSize, data)
     const testxs = testData.xs.reshape([batchSize, IMAGE_WIDTH, IMAGE_HEIGHT, 1]);
-    const labels = testData.labels.argMax(-1);
     const preds = model.predict(testxs).argMax(-1);
-  
+
     testxs.dispose();
     return [preds, labels];
   }
 
 async function showAccuracy(model, data, batchSize = 500) {
-    const [preds, labels] = await doPrediction(model, data, batchSize);
+    const preds = await doPrediction(model, data, batchSize);
     pred = await preds.data();
     for (let i = 0; i < batchSize; i++){
         console.log(pred[i] +" - "+ data[i][0]);

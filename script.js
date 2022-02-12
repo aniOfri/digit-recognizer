@@ -62,6 +62,7 @@ $(document).ready(function () {
    clearButton.addEventListener('click', function() {
       clear = true;
      context.clearRect(0, 0, canvas.width, canvas.height);
+     $("#guess").html("[] is the AI's guess.");
    });
  
    /*/ Handle Save Button
@@ -86,8 +87,7 @@ $(document).ready(function () {
          dataUrl: canvasData,
       },
       function (data, status) {
-         sent = true;
-         console.log(data);
+         $("#guess").html(data.response);
       });
    }
 
