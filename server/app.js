@@ -213,18 +213,16 @@ async function showAccuracy(model, data, batchSize = 500) {
 }
 
 async function start(){
-    const data = getData();
+    //const data = getData();
 
-    model = getModel();
+    //model = getModel();
     
-    await train(model, data);
-    //model = await tf.loadLayersModel('saved-model');
+    //await train(model, data);
+    model = await tf.loadLayersModel('file://./my-model/model.json');
     trained = true;
 
     //await showAccuracy(model, data[0], 20);
-    const saveResult = await model.save('saved-model');
-
-
+    //await model.save('file://./my-model');
 }
 
 start();
