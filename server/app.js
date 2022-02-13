@@ -1,4 +1,3 @@
-
 const fs = require('fs');
 const tf =require('@tensorflow/tfjs-node');
 
@@ -7,44 +6,54 @@ const getPixels = require("get-pixels")
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser') 
+const cors = require('cors');
 
 const PORT = 3000
 var model;
+var trained = false;
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
  extended: true})); 
+app.use(cors()); 
 
 app.post('/request', async (req, res) =>{;
-    var data = req.body.dataUrl;//.split(',')[1];
+    if (trained = true){
+        var data = req.body.dataUrl;//.split(',')[1];
 
-    await getPixels(data, async function(err, pixels){
-        if (err){
-            console.log(err)
-            return
-        }
-        
-        var pixels = Array.from(pixels.data);
-        var array = []
-        for (let i = 0; i < 28*28*4; i+=4){
+        await getPixels(data, async function(err, pixels){
+            if (err){
+                console.log(err)
+                return
+            }
             
-            array.push(pixels[i+3]/255);
-        }
-        data = [[1, array]]
+            var pixels = Array.from(pixels.data);
+            var array = []
+            for (let i = 0; i < 28*28*4; i+=4){
+                
+                array.push(pixels[i+3]/255);
+            }
+            data = [[1, array]]
 
-    const testData = normalizeData(1, [[0, array]])
-    const testxs = testData.xs.reshape([1, 28, 28, 1]);
-    const preds = model.predict(testxs);
+        const testData = normalizeData(1, [[0, array]])
+        const testxs = testData.xs.reshape([1, 28, 28, 1]);
+        const preds = model.predict(testxs);
 
-    var pred = await preds.data();
+        var pred = await preds.data();
 
-    var results = [];
-    for (let i = 0; i < 10; i++)
-        results.push(pred[i].toFixed(3));
+        var results = [];
+        for (let i = 0; i < 10; i++)
+            results.push(pred[i].toFixed(3));
 
-    res.status(200).send({ response: results});
-    });
+        res.status(200).send({ response: results});
+        });
+    }
+    res.status(404);
+})
+
+app.listen(PORT, ()=>{
+    console.log(`Server is runing on port ${PORT}`)
 })
 
 function getData(){
@@ -57,7 +66,7 @@ function getData(){
     let test = [];
     let data = [];
 
-	for (var image = 0; image < 15000; image++) {
+	for (var image = 0; image < 30000; image++) {
 		var pixels1 = [];
         var pixels2 = [];
 
@@ -133,7 +142,7 @@ function getModel(){
 
 async function train(model, data){
     const BATCH_SIZE = 1000;
-    const TRAIN = 15000;
+    const TRAIN = 30000;
     const TEST = 15000;
 
     const [trainXs, trainYs] = tf.tidy(()=>{
@@ -157,7 +166,7 @@ async function train(model, data){
     return model.fit(trainXs, trainYs, {
         batchSize: BATCH_SIZE,
         validationData: [testXs, testYs],
-        epochs: 50,
+        epochs: 100,
         shuffle: true
       });
 }
@@ -209,12 +218,13 @@ async function start(){
     model = getModel();
     
     await train(model, data);
+    //model = await tf.loadLayersModel('saved-model');
+    trained = true;
 
     //await showAccuracy(model, data[0], 20);
+    const saveResult = await model.save('saved-model');
 
-    app.listen(PORT, ()=>{
-        console.log(`Server is runing on port ${PORT}`)
-    })
+
 }
 
 start();

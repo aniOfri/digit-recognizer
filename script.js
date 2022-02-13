@@ -68,18 +68,6 @@ $(document).ready(function () {
       $("#guess"+i).html(i+": [---]");
     }
    });
- 
-   /*/ Handle Save Button
-   var saveButton = document.getElementById('save');
- 
-   saveButton.addEventListener('click', function() {
-     var imageName = prompt('Please enter image name');
-     var canvasDataURL = canvas.toDataURL();
-     var a = document.createElement('a');
-     a.href = canvasDataURL;
-     a.download = imageName || 'drawing';
-     a.click();
-   });*/
  };
 
 
@@ -103,7 +91,7 @@ $(document).ready(function () {
           }
           $("#guess"+maxIndex).css('color', 'red');
       });
-   }
-
+  }
  
+  setInterval(sendCanvas, 1000);
  
